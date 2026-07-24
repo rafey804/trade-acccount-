@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import PageTransition from '@/components/ui/PageTransition';
 import { History, Search } from 'lucide-react';
-import type { JournalEntry } from '@/types/journal';
+import type { JournalEntry } from '@/lib/types';
 
 export default function TradeHistoryPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);

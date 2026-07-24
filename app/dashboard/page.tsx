@@ -211,12 +211,12 @@ export default function DashboardPage() {
 
   // Calculate dynamic real-time totals
   const realTimeUnrealizedPnl = positions.reduce((sum, pos) => sum + (pos.unrealizedPnl || 0), 0);
-  const walletBalance = account ? (account.equity - account.unrealizedPnl) : 0;
+  const walletBalance = account ? (account.totalEquity - account.unrealizedPnl) : 0;
   const realTimeEquity = walletBalance + realTimeUnrealizedPnl;
 
   const liveAccount = account ? {
     ...account,
-    equity: realTimeEquity,
+    totalEquity: realTimeEquity,
     unrealizedPnl: realTimeUnrealizedPnl,
   } : null;
 

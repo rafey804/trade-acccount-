@@ -228,6 +228,7 @@ export async function getHistoryOrders(symbol?: string, limit: number = 50) {
     openType: number; // 1 = Open position, 2 = Close position
     profit: number;   // Realized PnL
     dealAvgPrice: number; // Average fill price
+    fee: number;      // Trading fee
   }[]>;
 
   if (!result.success) {
