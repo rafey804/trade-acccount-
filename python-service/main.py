@@ -265,10 +265,7 @@ app = FastAPI(title="Trader Command Center — WebSocket Bridge", lifespan=lifes
 # CORS — allow the frontend domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        os.getenv("FRONTEND_URL", "http://localhost:3000"),
-    ],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
