@@ -1,9 +1,7 @@
 // =============================================================================
-// Root page — redirects to /dashboard
+// NextAuth API Route Handler
 // =============================================================================
 
-import { redirect } from 'next/navigation';
+import { handlers } from '@/lib/auth';
 
-export default function Home() {
-  redirect('/dashboard');
-}
+export const { GET, POST } = handlers;

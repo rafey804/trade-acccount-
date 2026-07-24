@@ -1,26 +1,387 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* =============================================================================
+   Trader Command Center — Deep Space Premium Redesign
+   High-end dark dashboard theme with cyberpunk/neon accents
+   ============================================================================= */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-profit: var(--profit);
+  --color-profit-dim: var(--profit-dim);
+  --color-loss: var(--loss);
+  --color-loss-dim: var(--loss-dim);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Core Colors */
+  --background: #05050A; /* Extremely dark blue/black */
+  --foreground: #F8FAFC;
+  --muted: #1E293B;
+  --muted-fg: #94A3B8;
+
+  /* Accent Colors - Cyberpunk Vibe */
+  --accent-primary: #00F0FF; /* Electric Cyan */
+  --accent-secondary: #B026FF; /* Neon Purple */
+
+  /* Trading Colors - High Contrast */
+  --profit: #00E676; /* Vivid Emerald Green */
+  --profit-dim: rgba(0, 230, 118, 0.15);
+  --loss: #FF3B30; /* Vivid Crimson Red */
+  --loss-dim: rgba(255, 59, 48, 0.15);
+
+  /* Surface & Cards - Glassmorphism Level 2 */
+  --card: rgba(15, 23, 42, 0.6);
+  --card-hover: rgba(15, 23, 42, 0.85);
+  --surface: rgba(30, 41, 59, 0.5);
+  --surface-hover: rgba(30, 41, 59, 0.8);
+  --border: rgba(255, 255, 255, 0.08);
+
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------------------
+   Base Styles
+   --------------------------------------------------------------------------- */
+body {
+  background-color: var(--background);
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(0, 240, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(176, 38, 255, 0.04) 0%, transparent 50%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  min-height: 100vh;
+}
+
+/* ---------------------------------------------------------------------------
+   Premium Glassmorphism Card
+   --------------------------------------------------------------------------- */
+.glass-card {
+  background: var(--card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.glass-card:hover {
+  background: var(--card-hover);
+  border-color: rgba(0, 240, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 0 20px rgba(0, 240, 255, 0.05);
+}
+
+.glass-card:hover::before {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Glowing Typography & Elements
+   --------------------------------------------------------------------------- */
+.text-glow-profit {
+  color: var(--profit);
+  text-shadow: 0 0 12px rgba(0, 230, 118, 0.6);
+}
+
+.text-glow-loss {
+  color: var(--loss);
+  text-shadow: 0 0 12px rgba(255, 59, 48, 0.6);
+}
+
+.text-glow-primary {
+  color: var(--accent-primary);
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+}
+
+/* ---------------------------------------------------------------------------
+   Flash Animations (For Real-time Price Ticks)
+   --------------------------------------------------------------------------- */
+@keyframes flash-profit {
+  0% { background-color: rgba(0, 230, 118, 0.2); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flash-loss {
+  0% { background-color: rgba(255, 59, 48, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.flash-up {
+  animation: flash-profit 0.5s ease-out forwards;
+}
+
+.flash-down {
+  animation: flash-loss 0.5s ease-out forwards;
+}
+
+/* ---------------------------------------------------------------------------
+   Scrollbar Styling
+   --------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------------------------------------------------------------------------
+   Live Pulse Animation
+   --------------------------------------------------------------------------- */
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 230, 118, 0.4); }
+  50% { opacity: 0.8; transform: scale(1.1); box-shadow: 0 0 10px 4px rgba(0, 230, 118, 0); }
+}
+
+.animate-pulse-live {
+  animation: pulse-live 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Shimmer Effect (Skeleton Loading)
+   --------------------------------------------------------------------------- */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 25%,
+    rgba(255, 255, 255, 0.05) 50%,
+    var(--surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   Table Styles
+   --------------------------------------------------------------------------- */
+.data-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-table th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted-fg);
+  border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: all 0.2s ease;
+}
+
+.data-table tr:hover td {
+  background: var(--surface);
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive utilities
+   --------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .glass-card {
+    padding: 1.25rem;
+    border-radius: 12px;
   }
 }
 
-body {
-  background: var(--background);
+/* ---------------------------------------------------------------------------
+   Form Input Styles
+   --------------------------------------------------------------------------- */
+.form-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.form-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.form-input::placeholder {
+  color: var(--muted-fg);
+}
+
+/* ---------------------------------------------------------------------------
+   Button Styles
+   --------------------------------------------------------------------------- */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(135deg, var(--accent-primary), #0099ff);
+  color: #000;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.5);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--loss-dim);
+  color: var(--loss);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-danger:hover {
+  background: rgba(255, 59, 48, 0.25);
+  border-color: var(--loss);
+  box-shadow: 0 0 15px rgba(255, 59, 48, 0.3);
+}
+
+/* ---------------------------------------------------------------------------
+   Badge Styles
+   --------------------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------------------
+   Heatmap Calendar (GitHub-style)
+   --------------------------------------------------------------------------- */
+.heatmap-cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.heatmap-cell:hover {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+  box-shadow: 0 0 8px var(--accent-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive utilities
+   --------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .glass-card {
+    padding: 1rem;
+    border-radius: 12px;
+  }
 }

@@ -17,11 +17,12 @@ const MIN_REQUEST_INTERVAL = 55; // ~18 req/s with safety margin
  * Generate HMAC SHA256 signature for MEXC API authentication
  */
 function generateSignature(
+  apiKey: string,
   apiSecret: string,
   timestamp: string,
   queryString: string = ''
 ): string {
-  const message = `${apiSecret}${timestamp}${queryString}`;
+  const message = `${apiKey}${timestamp}${queryString}`;
   return crypto
     .createHmac('sha256', apiSecret)
     .update(message)
@@ -67,7 +68,7 @@ async function mexcFetch(
     ? queryString
     : JSON.stringify(body || {});
   
-  const signature = generateSignature(apiSecret, timestamp, signPayload);
+  const signature = generateSignature(apiKey, apiSecret, timestamp, signPayload);
 
   const url = queryString
     ? `${MEXC_BASE_URL}${endpoint}?${queryString}`
@@ -138,7 +139,7 @@ export async function getAccountAssets() {
     frozenBalance: number;
     positionMargin: number;
     equity: number;
-    unrealizedPnl: number;
+    unrealized: number;
   }[]>;
   
   if (!result.success) {
@@ -160,7 +161,7 @@ export async function getOpenPositions() {
     positionType: number;
     leverage: number;
     state: number;
-    unrealizedPnl: number;
+    unRealizedPnl: number;
     liquidatePrice: number;
     im: number;
     autoAddIm: boolean;
@@ -198,6 +199,39 @@ export async function getOpenOrders(symbol?: string) {
 
   if (!result.success) {
     throw new Error(result.message || 'Failed to fetch open orders');
+  }
+  return result.data || [];
+}
+
+/**
+ * Get historical closed orders (Filled)
+ */
+export async function getHistoryOrders(symbol?: string, limit: number = 50) {
+  const params: Record<string, string | number> = {};
+  if (symbol) params.symbol = symbol;
+  
+  params.page_num = 1;
+  params.page_size = limit;
+  params.state = 3; // 3 = Filled (Closed)
+
+  const result = await mexcFetch('/api/v1/private/order/list/history_orders', 'GET', params) as MexcApiResponse<{
+    orderId: string;
+    symbol: string;
+    price: number;
+    vol: number;
+    dealVol: number;
+    orderType: number;
+    side: number;
+    state: number;
+    createTime: number;
+    leverage: number;
+    openType: number; // 1 = Open position, 2 = Close position
+    profit: number;   // Realized PnL
+    dealAvgPrice: number; // Average fill price
+  }[]>;
+
+  if (!result.success) {
+    throw new Error(result.message || 'Failed to fetch history orders');
   }
   return result.data || [];
 }
