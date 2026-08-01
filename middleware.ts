@@ -15,6 +15,7 @@ export default auth((req) => {
   const publicPaths = [
     '/login',
     '/api/auth',
+    '/api/exness',
     '/favicon.ico',
     '/logo.svg',
   ];
