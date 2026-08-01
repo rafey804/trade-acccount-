@@ -118,9 +118,19 @@ void SyncOpenPositions()
 //+------------------------------------------------------------------+
 void SendOpenPositions(string positionsJson)
 {
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+   double marginFree = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
+   double marginUsed = AccountInfoDouble(ACCOUNT_MARGIN);
+   
+   string accountJson = StringFormat(
+      "{\"balance\":%.2f,\"equity\":%.2f,\"margin_free\":%.2f,\"margin\":%.2f}",
+      balance, equity, marginFree, marginUsed
+   );
+
    string payload = StringFormat(
-      "{\"secret\":\"%s\",\"positions\":%s}",
-      InpSecret, positionsJson
+      "{\"secret\":\"%s\",\"account\":%s,\"positions\":%s}",
+      InpSecret, accountJson, positionsJson
    );
    
    string url = InpDashboardURL + "/api/exness/live-positions";

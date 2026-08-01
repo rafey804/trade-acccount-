@@ -146,9 +146,9 @@ export default function LiveTrades() {
                         : <TrendingDown size={14} style={{ color: 'var(--loss)' }} />
                       }
                     </div>
-                    <div>
-                      <p className="text-xs font-bold" style={{ color: 'var(--fg)' }}>{pos.symbol}</p>
-                      <p className="text-[10px] font-mono" style={{ color: 'var(--fg-3)' }}>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold truncate max-w-[80px] sm:max-w-full" style={{ color: 'var(--fg)' }}>{pos.symbol}</p>
+                      <p className="text-[10px] font-mono whitespace-nowrap" style={{ color: 'var(--fg-3)' }}>
                         {pos.direction} · {pos.volume} lots
                       </p>
                     </div>

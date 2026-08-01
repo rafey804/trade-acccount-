@@ -39,6 +39,10 @@ export default function DashboardPage() {
   const [snapshots]                     = useState<EquitySnapshot[]>([]);
   const [loading, setLoading]           = useState(true);
 
+  // Live MT5 Data
+  const [accountMetrics, setAccountMetrics] = useState<any>(null);
+  const [livePnl, setLivePnl]               = useState(0);
+
   // We can still keep the current PKT date for the top right date display if needed
   const [dateStr, setDateStr] = useState('Loading...');
 
@@ -61,11 +65,39 @@ export default function DashboardPage() {
     finally { setLoading(false); }
   }, []);
 
+  const fetchLive = useCallback(async () => {
+    try {
+      const res = await fetch('/api/exness/live-positions');
+      if (res.ok) {
+        const d = await res.json();
+        
+        let overview = null;
+        if (d.accountMetrics) {
+          overview = {
+            totalEquity: d.accountMetrics.equity,
+            availableBalance: d.accountMetrics.balance,
+            marginUsed: d.accountMetrics.margin_used,
+            unrealizedPnl: d.totalFloating,
+            currency: 'USD',
+          };
+        }
+        
+        setAccountMetrics(overview);
+        setLivePnl(d.totalFloating || 0);
+      }
+    } catch { /* silent */ }
+  }, []);
+
   useEffect(() => {
     fetchStats();
-    const iv = setInterval(fetchStats, 30_000);
-    return () => clearInterval(iv);
-  }, [fetchStats]);
+    fetchLive();
+    const iv1 = setInterval(fetchStats, 30_000);
+    const iv2 = setInterval(fetchLive, 5_000);
+    return () => {
+      clearInterval(iv1);
+      clearInterval(iv2);
+    };
+  }, [fetchStats, fetchLive]);
 
   return (
     <PageTransition>
@@ -94,10 +126,10 @@ export default function DashboardPage() {
               <p className="text-xs font-semibold" style={{ color: 'var(--gold)' }}>BROKER</p>
               <p className="text-base font-bold mt-0.5" style={{ color: 'var(--fg)' }}>Exness</p>
               <p className="text-xs mt-1" style={{ color: 'var(--fg-3)' }}>
-                Account not connected — deposit $100 next week to go live
+                {accountMetrics ? 'Live connection active' : 'Account not connected — deposit $100 next week to go live'}
               </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
               <span
                 className="text-[11px] font-semibold px-3 py-1.5 rounded-lg"
                 style={{ background: 'var(--surface)', color: 'var(--fg-2)', border: '1px solid var(--border)' }}
@@ -125,15 +157,15 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* ── Balance Cards ────────────────────────────────────── */}
-        <BalanceCards data={null} loading={loading} />
+        <BalanceCards data={accountMetrics} loading={loading && !accountMetrics} />
 
         {/* ── PnL Cards ────────────────────────────────────────── */}
         <PnLCards
-          unrealizedPnl={0}
+          unrealizedPnl={livePnl}
           realizedToday={realizedToday}
           realizedWeek={realizedWeek}
           realizedMonth={realizedMonth}
-          loading={loading}
+          loading={loading && !accountMetrics}
         />
 
         {/* ── Charts ───────────────────────────────────────────── */}

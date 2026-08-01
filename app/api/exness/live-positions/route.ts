@@ -41,6 +41,26 @@ export async function POST(req: Request) {
     }
 
     const positions: any[] = body.positions || [];
+    const account = body.account || null;
+
+    // Step 0: Upsert account metrics if provided
+    if (account) {
+      const { error: accError } = await supabase
+        .from('account_metrics')
+        .upsert({
+          id: 1,
+          balance: parseFloat(account.balance) || 0,
+          equity: parseFloat(account.equity) || 0,
+          margin_free: parseFloat(account.margin_free) || 0,
+          margin_used: parseFloat(account.margin) || 0,
+          last_updated: new Date().toISOString()
+        }, { onConflict: 'id' });
+        
+      if (accError) {
+        console.error('Account upsert error:', accError);
+        // Continue even if account metrics fail so we don't break positions sync
+      }
+    }
 
     // Step 1: Upsert all current open positions
     if (positions.length > 0) {
@@ -101,20 +121,30 @@ export async function POST(req: Request) {
  */
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    // Fetch live positions
+    const { data: positionsData, error: positionsError } = await supabase
       .from('live_positions')
       .select('*')
-      .order('open_time', { ascending: false });
+      .order('open_time', { ascending: false })
+      .order('ticket', { ascending: false }); // Stable sort
 
-    if (error) throw error;
+    if (positionsError) throw positionsError;
+
+    // Fetch account metrics
+    const { data: accountData } = await supabase
+      .from('account_metrics')
+      .select('*')
+      .eq('id', 1)
+      .single();
 
     // Calculate total floating PnL
-    const totalFloating = (data || []).reduce((sum: number, p: any) => sum + (p.floating_pnl || 0), 0);
+    const totalFloating = (positionsData || []).reduce((sum: number, p: any) => sum + (p.floating_pnl || 0), 0);
 
     return NextResponse.json({
-      positions: data || [],
+      positions: positionsData || [],
       totalFloating,
-      count: (data || []).length,
+      count: (positionsData || []).length,
+      accountMetrics: accountData || null,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
