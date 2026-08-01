@@ -1,101 +1,78 @@
 'use client';
 
 // =============================================================================
-// Balance Cards — Total equity, available balance, margin used
+// Balance Cards — CSS variable aware, dark + light
 // =============================================================================
 
 import { motion } from 'framer-motion';
-import { Wallet, TrendingUp, ShieldCheck } from 'lucide-react';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 import type { AccountOverview } from '@/lib/types';
 
-interface BalanceCardsProps {
-  data: AccountOverview | null;
-  loading: boolean;
-}
+interface Props { data: AccountOverview | null; loading: boolean; }
 
 const cards = [
-  {
-    key: 'totalEquity',
-    label: 'Total Equity',
-    icon: Wallet,
-    gradient: 'from-[var(--accent-primary)] to-blue-600',
-    iconColor: 'text-[var(--accent-primary)]',
-    glowColor: 'group-hover:shadow-[0_0_30px_rgba(0,240,255,0.2)]',
-  },
-  {
-    key: 'availableBalance',
-    label: 'Available Balance',
-    icon: TrendingUp,
-    gradient: 'from-[var(--profit)] to-emerald-600',
-    iconColor: 'text-[var(--profit)]',
-    glowColor: 'group-hover:shadow-[0_0_30px_rgba(0,230,118,0.2)]',
-  },
-  {
-    key: 'marginUsed',
-    label: 'Margin Used',
-    icon: ShieldCheck,
-    gradient: 'from-[var(--accent-secondary)] to-purple-600',
-    iconColor: 'text-[var(--accent-secondary)]',
-    glowColor: 'group-hover:shadow-[0_0_30px_rgba(176,38,255,0.2)]',
-  },
+  { key: 'totalEquity',      label: 'Total Equity',      tag: 'USDT' },
+  { key: 'availableBalance', label: 'Available Balance',  tag: 'FREE' },
+  { key: 'marginUsed',       label: 'Margin Used',        tag: 'LOCKED' },
 ];
 
-export default function BalanceCards({ data, loading }: BalanceCardsProps) {
+export default function BalanceCards({ data, loading }: Props) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {cards.map((card, i) => (
         <motion.div
           key={card.key}
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className={`glass-card group relative overflow-hidden transition-all duration-500 ${card.glowColor}`}
+          transition={{ delay: 0.06 + i * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+          className="card"
         >
-          {/* Subtle Background Radial Glow */}
-          <div className={`absolute -right-10 -top-10 w-32 h-32 rounded-full opacity-10 blur-3xl transition-opacity duration-500 group-hover:opacity-30 bg-gradient-to-br ${card.gradient}`} />
-
-          <div className="flex items-center justify-between mb-4 relative z-10">
-            <span className="text-xs font-bold text-[var(--muted-fg)] uppercase tracking-[0.15em]">
-              {card.label}
+          <div className="flex items-center justify-between mb-4">
+            <p className="label">{card.label}</p>
+            <span
+              className="text-[9px] font-bold px-2 py-0.5 rounded"
+              style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}
+            >
+              {card.tag}
             </span>
-            <div className={`w-10 h-10 rounded-xl bg-[var(--surface)] border border-[var(--border)]
-                            flex items-center justify-center transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3`}>
-              <card.icon size={18} className={card.iconColor} />
+          </div>
+
+          {loading ? (
+            <div className="h-9 w-36 animate-shimmer" />
+          ) : data ? (
+            <div className="text-2xl font-bold tracking-tight" style={{ color: 'var(--fg)' }}>
+              <AnimatedCounter
+                value={(data[card.key as keyof AccountOverview] as number) || 0}
+                prefix="$"
+                decimals={2}
+              />
             </div>
-          </div>
+          ) : (
+            <div className="text-2xl font-bold" style={{ color: 'var(--fg-3)' }}>—</div>
+          )}
 
-          <div className="relative z-10">
-            {loading ? (
-              <div className="h-10 w-32 rounded-lg animate-shimmer" />
-            ) : (
-              <div className={`text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--foreground)] drop-shadow-md`}>
-                <AnimatedCounter
-                  value={data?.[card.key as keyof AccountOverview] as number || 0}
-                  prefix="$"
-                  decimals={2}
-                />
-              </div>
-            )}
-          </div>
-
+          {/* Margin usage bar */}
           {!loading && data && card.key === 'marginUsed' && data.totalEquity > 0 && (
-            <div className="mt-4 relative z-10">
-              <div className="flex justify-between text-xs font-semibold text-[var(--muted-fg)] mb-1.5 tracking-wide">
-                <span>USAGE</span>
-                <span className="text-[var(--accent-secondary)] drop-shadow-[0_0_8px_rgba(176,38,255,0.5)]">
+            <div className="mt-4">
+              <div className="flex justify-between mb-1.5">
+                <span className="label">Usage</span>
+                <span className="text-[11px] font-bold" style={{ color: 'var(--gold)' }}>
                   {((data.marginUsed / data.totalEquity) * 100).toFixed(1)}%
                 </span>
               </div>
-              <div className="h-1.5 rounded-full bg-[var(--surface)] overflow-hidden border border-[var(--border)]">
+              <div className="progress-track">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.min((data.marginUsed / data.totalEquity) * 100, 100)}%` }}
-                  transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
-                  className="h-full rounded-full bg-gradient-to-r from-[var(--accent-secondary)] to-purple-400 shadow-[0_0_10px_rgba(176,38,255,0.6)]"
+                  transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+                  className="progress-fill-gold"
                 />
               </div>
             </div>
+          )}
+
+          {!loading && !data && (
+            <p className="text-[11px] mt-2" style={{ color: 'var(--fg-3)' }}>Connect Exness to see data</p>
           )}
         </motion.div>
       ))}

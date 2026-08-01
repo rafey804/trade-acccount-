@@ -19,7 +19,6 @@ const SETUPS = ['Liquidity Sweep', 'Order Block', 'FVG', 'Breakout', 'Custom'];
 
 export default function JournalPage() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [symbols, setSymbols] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editEntry, setEditEntry] = useState<JournalEntry | null>(null);
@@ -56,18 +55,6 @@ export default function JournalPage() {
       setLoading(false);
     }
   }, [search, filterSymbol, filterResult, filterSetup]);
-
-  // Fetch symbols
-  useEffect(() => {
-    fetch('/api/mexc/symbols')
-      .then(res => res.json())
-      .then(data => {
-        if (data.symbols) {
-          setSymbols(data.symbols.map((s: { symbol: string }) => s.symbol));
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     fetchEntries();
@@ -147,7 +134,7 @@ export default function JournalPage() {
           <div className="mb-6">
             <JournalForm
               editEntry={editEntry}
-              symbols={symbols}
+              symbols={[]}
               onSubmit={handleSubmit}
               onCancel={() => {
                 setShowForm(false);

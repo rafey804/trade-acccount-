@@ -1,7 +1,7 @@
 'use client';
 
 // =============================================================================
-// Live Indicator — Pulsing connection status badge
+// Live Indicator — Gold Edition (Exness connection status)
 // =============================================================================
 
 import { motion } from 'framer-motion';
@@ -19,29 +19,31 @@ export default function LiveIndicator({ status }: LiveIndicatorProps) {
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-extrabold uppercase tracking-widest
-        border transition-all shadow-[0_0_15px_rgba(0,0,0,0.5)]
-        ${isConnected
-          ? 'bg-[var(--profit)]/15 border-[var(--profit)]/30 text-[var(--profit)] drop-shadow-[0_0_8px_rgba(0,230,118,0.8)]'
-          : 'bg-[var(--loss)]/15 border-[var(--loss)]/30 text-[var(--loss)] drop-shadow-[0_0_8px_rgba(255,59,48,0.8)]'
-        }`}
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+      style={{
+        background: isConnected ? 'rgba(16,185,129,0.1)' : 'rgba(107,114,128,0.08)',
+        border: `1px solid ${isConnected ? 'rgba(16,185,129,0.3)' : 'rgba(107,114,128,0.15)'}`,
+        color: isConnected ? '#10B981' : '#6B7280',
+      }}
     >
       {isConnected ? (
         <>
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-pulse-live absolute inline-flex h-full w-full rounded-full bg-[var(--profit)] opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--profit)] shadow-[0_0_5px_currentColor]" />
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping"
+              style={{ background: '#10B981' }} />
+            <span className="relative inline-flex h-2 w-2 rounded-full"
+              style={{ background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.6)' }} />
           </span>
-          <Wifi size={14} strokeWidth={3} />
-          MEXC Live
+          <Wifi size={12} strokeWidth={2.5} />
+          Live
         </>
       ) : (
         <>
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--loss)] shadow-[0_0_5px_currentColor]" />
+          <span className="relative flex h-2 w-2">
+            <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: '#6B7280' }} />
           </span>
-          <WifiOff size={14} strokeWidth={3} />
-          {status === 'connecting' ? 'Connecting...' : 'Disconnected'}
+          <WifiOff size={12} strokeWidth={2.5} />
+          {status === 'connecting' ? 'Connecting' : 'Offline'}
         </>
       )}
     </motion.div>

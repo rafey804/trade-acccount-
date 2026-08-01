@@ -1,5 +1,5 @@
 // =============================================================================
-// Trader Command Center — Root Layout
+// Trader Command Center — Root Layout (Exness Edition)
 // =============================================================================
 
 import type { Metadata } from 'next';
@@ -18,9 +18,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Trader Command Center',
-  description: 'Personal trading dashboard — Live positions, journal, and analytics for MEXC Futures.',
-  keywords: ['trading', 'dashboard', 'MEXC', 'futures', 'journal', 'analytics'],
+  title: 'Trader Command Center | BTC & Gold',
+  description: 'Personal trading dashboard — Exness | BTC & Gold discipline-driven trading.',
+  keywords: ['trading', 'dashboard', 'Exness', 'BTC', 'Gold', 'XAU/USD', 'journal', 'discipline'],
 };
 
 export default function RootLayout({

@@ -1,280 +1,207 @@
 'use client';
 
 // =============================================================================
-// PAGE 1: Live Dashboard
-// Real-time account overview with MEXC data
+// Dashboard — Clean professional overview
+// No fake data, real journal stats only, dark+light mode
 // =============================================================================
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import PageTransition from '@/components/ui/PageTransition';
 import BalanceCards from '@/components/dashboard/BalanceCards';
 import PnLCards from '@/components/dashboard/PnLCards';
-import PositionsTable from '@/components/dashboard/PositionsTable';
-import OrdersTable from '@/components/dashboard/OrdersTable';
 import EquityCurve from '@/components/dashboard/EquityCurve';
 import WinRateCard from '@/components/dashboard/WinRateCard';
 import AllocationChart from '@/components/dashboard/AllocationChart';
-import LiveIndicator from '@/components/dashboard/LiveIndicator';
-import type {
-  AccountOverview,
-  EquitySnapshot,
-  WsConnectionStatus,
-  MexcTickerUpdate,
-} from '@/lib/types';
-import { getPositionSide } from '@/lib/utils';
+import RiskCalculator from '@/components/dashboard/RiskCalculator';
+import MarketNews from '@/components/dashboard/MarketNews';
+import EconomicCalendar from '@/components/dashboard/EconomicCalendar';
+import SessionClocks from '@/components/dashboard/SessionClocks';
+import MiniChart from '@/components/dashboard/MiniChart';
+import HabitTracker from '@/components/dashboard/HabitTracker';
+import QuickLogTrade from '@/components/dashboard/QuickLogTrade';
+import DisciplineInstruments from '@/components/dashboard/DisciplineInstruments';
+import LiveTrades from '@/components/dashboard/LiveTrades';
+import type { EquitySnapshot } from '@/lib/types';
+
+const up = (delay = 0) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+});
 
 export default function DashboardPage() {
-  const [account, setAccount] = useState<AccountOverview | null>(null);
-  const [positions, setPositions] = useState<Array<{
-    positionId: string;
-    symbol: string;
-    holdVol: number;
-    holdAvgPrice: number;
-    positionType: number;
-    leverage: number;
-    unrealizedPnl: number;
-    liquidatePrice: number;
-    im: number;
-    autoAddIm: boolean;
-    markPrice?: number;
-  }>>([]);
-  const [orders, setOrders] = useState<Array<{
-    orderId: string;
-    symbol: string;
-    price: number;
-    vol: number;
-    dealVol: number;
-    orderType: number;
-    side: number;
-    state: number;
-    createTime: number;
-    leverage: number;
-  }>>([]);
-  const [equitySnapshots, setEquitySnapshots] = useState<EquitySnapshot[]>([]);
-  const [winRate, setWinRate] = useState(0);
-  const [totalTrades, setTotalTrades] = useState(0);
-  const [realizedToday, setRealizedToday] = useState(0);
-  const [realizedWeek, setRealizedWeek] = useState(0);
-  const [realizedMonth, setRealizedMonth] = useState(0);
-  const [wsStatus, setWsStatus] = useState<WsConnectionStatus>('disconnected');
-  const [loading, setLoading] = useState(true);
-  const wsRef = useRef<WebSocket | null>(null);
+  const [winRate, setWinRate]           = useState(0);
+  const [totalTrades, setTotalTrades]   = useState(0);
+  const [realizedToday, setToday]       = useState(0);
+  const [realizedWeek, setWeek]         = useState(0);
+  const [realizedMonth, setMonth]       = useState(0);
+  const [snapshots]                     = useState<EquitySnapshot[]>([]);
+  const [loading, setLoading]           = useState(true);
 
-  // Fetch account data from our API
-  const fetchAccountData = useCallback(async () => {
-    try {
-      const [accountRes, ordersRes] = await Promise.all([
-        fetch('/api/mexc/account'),
-        fetch('/api/mexc/orders'),
-      ]);
+  // We can still keep the current PKT date for the top right date display if needed
+  const [dateStr, setDateStr] = useState('Loading...');
 
-      if (accountRes.ok) {
-        const data = await accountRes.json();
-        setAccount(data.account);
-        setPositions(data.positions || []);
-      }
-
-      if (ordersRes.ok) {
-        const data = await ordersRes.json();
-        setOrders(data.orders || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch account data:', error);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    setDateStr(new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }));
   }, []);
 
-  // Fetch journal stats for win rate and realized PnL cards
-  const fetchJournalStats = useCallback(async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const res = await fetch('/api/analytics');
       if (res.ok) {
-        const data = await res.json();
-        setWinRate(data.overallWinRate || 0);
-        setTotalTrades(data.totalTrades || 0);
-        setRealizedToday(data.realizedToday || 0);
-        setRealizedWeek(data.realizedWeek || 0);
-        setRealizedMonth(data.realizedMonth || 0);
+        const d = await res.json();
+        setWinRate(d.overallWinRate  || 0);
+        setTotalTrades(d.totalTrades || 0);
+        setToday(d.realizedToday     || 0);
+        setWeek(d.realizedWeek       || 0);
+        setMonth(d.realizedMonth     || 0);
       }
-    } catch (error) {
-      console.error('Failed to fetch journal stats:', error);
-    }
+    } catch { /* silent */ }
+    finally { setLoading(false); }
   }, []);
 
-  // Connect to WebSocket bridge for live ticker data
-  const connectWebSocket = useCallback(() => {
-    const wsUrl = process.env.NEXT_PUBLIC_WS_BRIDGE_URL;
-    if (!wsUrl) return;
-
-    setWsStatus('connecting');
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      setWsStatus('connected');
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'ticker' && msg.data) {
-          const tickers: MexcTickerUpdate[] = Array.isArray(msg.data) ? msg.data : [msg.data];
-          // Update position mark prices and calculate real-time PnL
-          setPositions(prev =>
-            prev.map(pos => {
-              const ticker = tickers.find(t => t.symbol === pos.symbol);
-              if (ticker) {
-                const markPrice = ticker.lastPrice;
-                // Dynamically reverse-engineer the contract multiplier from margin and leverage
-                // Position Value (USDT) = IM * Leverage = holdAvgPrice * holdVol * Multiplier
-                const positionValueUsdt = pos.im * pos.leverage;
-                const multiplier = positionValueUsdt / (pos.holdAvgPrice * pos.holdVol);
-                
-                const sideMulti = pos.positionType === 1 ? 1 : -1;
-                const pnl = (markPrice - pos.holdAvgPrice) * pos.holdVol * multiplier * sideMulti;
-                
-                return { ...pos, markPrice, unrealizedPnl: pnl };
-              }
-              return pos;
-            })
-          );
-        }
-      } catch {
-        // Ignore parse errors
-      }
-    };
-
-    ws.onclose = () => {
-      setWsStatus('disconnected');
-      // Auto-reconnect after 5 seconds
-      setTimeout(connectWebSocket, 5000);
-    };
-
-    ws.onerror = () => {
-      setWsStatus('error');
-    };
-  }, []);
-
-  // Subscribe to high-frequency tickers for active positions
   useEffect(() => {
-    if (wsStatus === 'connected' && wsRef.current && positions.length > 0) {
-      const symbols = positions.map(p => p.symbol);
-      wsRef.current.send(JSON.stringify({
-        type: 'subscribe',
-        symbols
-      }));
-    }
-  }, [wsStatus, positions.length]);
-
-  // Cancel order handler
-  const handleCancelOrder = async (symbol: string, orderId: string) => {
-    const res = await fetch('/api/mexc/orders', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbol, orderId }),
-    });
-
-    if (res.ok) {
-      // Remove from local state
-      setOrders(prev => prev.filter(o => o.orderId !== orderId));
-    } else {
-      const data = await res.json();
-      alert(data.error || 'Failed to cancel order');
-    }
-  };
-
-  useEffect(() => {
-    fetchAccountData();
-    fetchJournalStats();
-    connectWebSocket();
-
-    // Poll account data every 10 seconds
-    const interval = setInterval(fetchAccountData, 10000);
-
-    return () => {
-      clearInterval(interval);
-      wsRef.current?.close();
-    };
-  }, [fetchAccountData, fetchJournalStats, connectWebSocket]);
-
-  // Compute allocation from positions
-  const allocation = positions.map(pos => {
-    const totalMargin = positions.reduce((sum, p) => sum + p.im, 0);
-    return {
-      symbol: pos.symbol,
-      value: pos.im,
-      percentage: totalMargin > 0 ? (pos.im / totalMargin) * 100 : 0,
-      side: getPositionSide(pos.positionType) as 'Long' | 'Short',
-    };
-  });
-
-  // Calculate dynamic real-time totals
-  const realTimeUnrealizedPnl = positions.reduce((sum, pos) => sum + (pos.unrealizedPnl || 0), 0);
-  const walletBalance = account ? (account.totalEquity - account.unrealizedPnl) : 0;
-  const realTimeEquity = walletBalance + realTimeUnrealizedPnl;
-
-  const liveAccount = account ? {
-    ...account,
-    totalEquity: realTimeEquity,
-    unrealizedPnl: realTimeUnrealizedPnl,
-  } : null;
+    fetchStats();
+    const iv = setInterval(fetchStats, 30_000);
+    return () => clearInterval(iv);
+  }, [fetchStats]);
 
   return (
     <PageTransition>
-      {/* Ambient Background Effects */}
-      <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--accent-primary)] opacity-[0.03] blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[var(--accent-secondary)] opacity-[0.03] blur-[120px]" />
-      </div>
-
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div className="relative">
-            <h1 className="text-3xl font-extrabold text-[var(--foreground)] tracking-tight drop-shadow-md">
-              Dashboard
-            </h1>
-            <div className="h-1 w-12 bg-gradient-to-r from-[var(--accent-primary)] to-transparent rounded-full mt-2" />
-            <p className="text-sm font-semibold tracking-wider uppercase text-[var(--muted-fg)] mt-2">
-              Real-time account overview
-            </p>
+
+        {/* ── Header ──────────────────────────────────────────── */}
+        <motion.div {...up(0)} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--fg)' }}>Dashboard</h1>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--fg-3)' }}>{dateStr}</p>
           </div>
-          <LiveIndicator status={wsStatus} />
-        </div>
+        </motion.div>
 
-        {/* Balance Cards */}
-        <BalanceCards data={liveAccount} loading={loading} />
+        {/* ── World Clocks ──────────────────────────────────────── */}
+        <motion.div {...up(0.02)}>
+          <SessionClocks />
+        </motion.div>
 
-        {/* PnL Cards */}
+        {/* ── Exness Status Banner ─────────────────────────────── */}
+        <motion.div {...up(0.04)}>
+          <div
+            className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            style={{ background: 'var(--gold-dim)', border: '1px solid var(--gold-border)' }}
+          >
+            <div>
+              <p className="text-xs font-semibold" style={{ color: 'var(--gold)' }}>BROKER</p>
+              <p className="text-base font-bold mt-0.5" style={{ color: 'var(--fg)' }}>Exness</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--fg-3)' }}>
+                Account not connected — deposit $100 next week to go live
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-lg"
+                style={{ background: 'var(--surface)', color: 'var(--fg-2)', border: '1px solid var(--border)' }}
+              >
+                BTC/USD
+              </span>
+              <span
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-lg"
+                style={{ background: 'var(--surface)', color: 'var(--fg-2)', border: '1px solid var(--border)' }}
+              >
+                XAU/USD
+              </span>
+              <RiskCalculator />
+              <QuickLogTrade />
+              <a
+                href="https://www.exness.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary text-[12px] py-1.5 px-4"
+              >
+                Open Exness ↗
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── Balance Cards ────────────────────────────────────── */}
+        <BalanceCards data={null} loading={loading} />
+
+        {/* ── PnL Cards ────────────────────────────────────────── */}
         <PnLCards
-          unrealizedPnl={realTimeUnrealizedPnl}
+          unrealizedPnl={0}
           realizedToday={realizedToday}
           realizedWeek={realizedWeek}
           realizedMonth={realizedMonth}
           loading={loading}
         />
 
-        {/* Positions & Orders */}
-        <div className="space-y-6">
-          <PositionsTable positions={positions} loading={loading} />
-          <OrdersTable
-            orders={orders}
-            loading={loading}
-            onCancelOrder={handleCancelOrder}
-          />
+        {/* ── Charts ───────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+          <div className="xl:col-span-2">
+            <EquityCurve snapshots={snapshots} loading={loading} />
+          </div>
+          <div className="space-y-5">
+            <WinRateCard winRate={winRate} totalTrades={totalTrades} loading={loading} />
+            <AllocationChart data={[]} loading={loading} />
+          </div>
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="xl:col-span-2">
-            <EquityCurve snapshots={equitySnapshots} loading={loading} />
+        {/* ── Live Trades ───────────────────────────────────────────── */}
+        <motion.div {...up(0.15)}>
+          <LiveTrades />
+        </motion.div>
+
+        {/* ── Market Data ───────────────────────────── */}
+        <motion.div {...up(0.2)}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <MiniChart />
+            <MarketNews />
+            <EconomicCalendar />
           </div>
-          <div className="space-y-6 flex flex-col justify-between">
-            <WinRateCard winRate={winRate} totalTrades={totalTrades} loading={loading} />
-            <AllocationChart data={allocation} loading={loading} />
+        </motion.div>
+
+      {/* ── Discipline & Risk ─────────────────────────────────── */}
+        <motion.div {...up(0.25)}>
+          <DisciplineInstruments />
+        </motion.div>
+
+        {/* ── Habits & Rules ────────────────────────────────────── */}
+        <motion.div {...up(0.35)}>
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div className="xl:col-span-1">
+              <HabitTracker />
+            </div>
+            <div className="card xl:col-span-2">
+              <p className="label mb-4">Your Rules</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  'Only XAU/USD (Gold) & BTC/USD — no altcoins',
+                  'Max 2 trades per session (London 12–5 PM, NY 6–11 PM PKT)',
+                  'Risk max 2% per trade ($2 on $100 account)',
+                  '2-hour cooldown after any loss — no revenge trading',
+                  'Daily loss limit $5 — hit it, close the platform',
+                  'Only trade when setup clearly confirms entry',
+                ].map((rule, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2.5 p-3 rounded-xl"
+                    style={{ background: 'var(--surface-2)' }}
+                  >
+                    <span
+                      className="mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black shrink-0"
+                      style={{ background: 'var(--gold-dim)', color: 'var(--gold)' }}
+                    >
+                      {i + 1}
+                    </span>
+                    <p className="text-[12px] leading-relaxed" style={{ color: 'var(--fg-2)' }}>{rule}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        </motion.div>
+
       </div>
     </PageTransition>
   );

@@ -1,12 +1,12 @@
 'use client';
 
 // =============================================================================
-// Sidebar Navigation
+// Sidebar — Professional, minimal, no logo
 // =============================================================================
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   BookOpen,
@@ -14,154 +14,202 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  TrendingUp,
   History,
+  ShieldCheck,
+  Target,
+  StickyNote,
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useState } from 'react';
+import ThemeToggle from './ThemeToggle';
 
 const navItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Journal', href: '/journal', icon: BookOpen },
-  { name: 'Trade History', href: '/trade-history', icon: History },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+  { name: 'Dashboard',     href: '/dashboard',     icon: LayoutDashboard },
+  { name: 'Strategy',      href: '/strategy',      icon: Target },
+  { name: 'Discipline',    href: '/discipline',    icon: ShieldCheck },
+  { name: 'Notes',         href: '/notes',         icon: StickyNote },
+
+  { name: 'Journal',       href: '/journal',       icon: BookOpen },
+  { name: 'Exness History', href: '/trade-history', icon: History },
+  { name: 'Analytics',     href: '/analytics',     icon: BarChart3 },
 ];
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const pathname  = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* ── Desktop Sidebar ─────────────────────────────────── */}
       <motion.aside
         initial={false}
-        animate={{ width: collapsed ? 72 : 260 }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        className="hidden md:flex flex-col fixed left-0 top-0 h-screen z-40
-                   bg-[var(--background)] border-r border-[var(--border)]
-                   backdrop-blur-xl shadow-[5px_0_30px_rgba(0,0,0,0.5)]"
+        animate={{ width: collapsed ? 64 : 220 }}
+        transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+        className="hidden md:flex flex-col fixed left-0 top-0 h-screen z-40 overflow-hidden"
+        style={{
+          background: 'var(--surface)',
+          borderRight: '1px solid var(--border)',
+        }}
         id="sidebar"
       >
-        {/* Logo Area */}
-        <div className="flex items-center gap-3 px-5 py-6 border-b border-[var(--border)] bg-[var(--surface)]">
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              className="overflow-hidden"
-            >
-              <h1 className="text-sm font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-secondary)] whitespace-nowrap tracking-wider uppercase">
-                Trader Command
-              </h1>
-              <p className="text-[10px] text-[var(--muted-fg)] font-bold tracking-[0.3em] uppercase">
-                Center
-              </p>
-            </motion.div>
-          )}
+        {/* Brand row — just text, no logo */}
+        <div
+          className="flex items-center gap-2.5 px-4 h-14 shrink-0"
+          style={{ borderBottom: '1px solid var(--border)' }}
+        >
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="text-sm font-bold tracking-tight whitespace-nowrap"
+                style={{ color: 'var(--fg)' }}
+              >
+                Trader
+              </motion.span>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 py-6 px-3 space-y-2">
+        {/* Nav */}
+        <nav className="flex-1 py-4 px-2 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname.startsWith(item.href);
             const Icon = item.icon;
-
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative flex items-center gap-3 px-3 py-3 rounded-xl
-                           text-sm font-bold transition-all duration-300 uppercase tracking-widest
-                           ${isActive
-                             ? 'text-[var(--accent-primary)] drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]'
-                             : 'text-[var(--muted-fg)] hover:text-[var(--foreground)]'
-                           }
-                           hover:bg-[var(--surface-hover)] group`}
-                id={`nav-${item.name.toLowerCase()}`}
+                className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-200 group"
+                style={{
+                  background:    isActive ? 'var(--gold-dim)' : 'transparent',
+                  color:         isActive ? 'var(--gold)'     : 'var(--fg-2)',
+                }}
+                onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)'; }}
+                onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                id={`nav-${item.name.toLowerCase().replace(/\s/g, '-')}`}
               >
+                {/* Active left bar */}
                 {isActive && (
-                  <motion.div
-                    layoutId="sidebar-active"
-                    className="absolute inset-0 rounded-xl bg-[var(--accent-primary)]/10
-                               border border-[var(--accent-primary)]/30 shadow-[inset_0_0_15px_rgba(0,240,255,0.1)]"
-                    transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  <motion.span
+                    layoutId="nav-active-bar"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-full"
+                    style={{ background: 'var(--gold)' }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
-                <Icon size={20} className="relative z-10 shrink-0 group-hover:scale-110 transition-transform" />
-                {!collapsed && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="relative z-10 whitespace-nowrap"
-                  >
-                    {item.name}
-                  </motion.span>
-                )}
+
+                <Icon size={17} strokeWidth={isActive ? 2.5 : 2} className="shrink-0" />
+
+                <AnimatePresence>
+                  {!collapsed && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -6 }}
+                      transition={{ duration: 0.15 }}
+                      className="text-[13px] font-medium whitespace-nowrap"
+                    >
+                      {item.name}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </Link>
             );
           })}
         </nav>
 
-        {/* Bottom Controls */}
-        <div className="p-4 border-t border-[var(--border)] space-y-3 bg-[var(--surface)]">
+        {/* Bottom controls */}
+        <div
+          className="px-2 py-3 space-y-1 shrink-0"
+          style={{ borderTop: '1px solid var(--border)' }}
+        >
+          {/* Theme toggle */}
+          <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-3 py-1'}`}>
+            <ThemeToggle />
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-[12px] font-medium"
+                  style={{ color: 'var(--fg-3)' }}
+                >
+                  Toggle theme
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Sign Out */}
           <button
             onClick={() => signOut({ callbackUrl: '/login' })}
-            className="flex items-center gap-3 w-full px-3 py-3 rounded-xl
-                       text-sm font-bold uppercase tracking-widest text-[var(--muted-fg)]
-                       hover:text-[var(--loss)] hover:bg-[var(--loss)]/10 hover:shadow-[inset_0_0_15px_rgba(255,59,48,0.2)]
-                       transition-all duration-300 cursor-pointer group"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-colors duration-200 cursor-pointer text-left"
+            style={{ color: 'var(--fg-3)' }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--loss)';
+              (e.currentTarget as HTMLElement).style.background = 'var(--loss-dim)';
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLElement).style.color = 'var(--fg-3)';
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+            }}
             id="logout-button"
           >
-            <LogOut size={20} className="shrink-0 group-hover:scale-110 transition-transform" />
-            {!collapsed && <span>Sign Out</span>}
+            <LogOut size={16} strokeWidth={2} className="shrink-0" />
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-[13px] font-medium"
+                >
+                  Sign out
+                </motion.span>
+              )}
+            </AnimatePresence>
           </button>
 
+          {/* Collapse toggle */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="flex items-center justify-center w-full py-3 rounded-xl
-                       text-[var(--muted-fg)] hover:text-[var(--accent-primary)]
-                       hover:bg-[var(--surface-hover)] transition-all duration-300 cursor-pointer"
+            className="flex items-center justify-center w-full py-2 rounded-xl transition-colors duration-200 cursor-pointer"
+            style={{ color: 'var(--fg-3)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-2)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            {collapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
           </button>
         </div>
       </motion.aside>
 
-      {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40
-                      bg-[var(--background)] border-t border-[var(--border)] shadow-[0_-5px_30px_rgba(0,0,0,0.5)]
-                      backdrop-blur-xl flex items-center justify-around py-2 px-2"
-           id="mobile-nav"
+      {/* ── Mobile Bottom Nav ────────────────────────────────── */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-1.5"
+        style={{
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
+        }}
+        id="mobile-nav"
       >
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           const Icon = item.icon;
-          // Shorter names for mobile
-          const mobileName = item.name === 'Trade History' ? 'History' : item.name;
-
+          const label = item.name === 'Trade History' ? 'History' : item.name;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`relative flex flex-col items-center gap-1 px-2 py-2 rounded-xl
-                         text-[9px] font-bold uppercase tracking-wider transition-all duration-300
-                         ${isActive
-                           ? 'text-[var(--accent-primary)] drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]'
-                           : 'text-[var(--muted-fg)]'
-                         }`}
+              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-colors duration-200"
+              style={{ color: isActive ? 'var(--gold)' : 'var(--fg-3)' }}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="mobile-active"
-                  className="absolute inset-0 rounded-xl bg-[var(--accent-primary)]/10 border border-[var(--accent-primary)]/30"
-                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                />
-              )}
-              <Icon size={20} className="relative z-10" />
-              <span className="relative z-10 whitespace-nowrap">{mobileName}</span>
+              <Icon size={19} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="text-[9px] font-semibold tracking-wide">{label}</span>
             </Link>
           );
         })}

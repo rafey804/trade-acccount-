@@ -4,6 +4,9 @@
 // =============================================================================
 
 import { NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
+
 import { auth } from '@/lib/auth';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limiter';

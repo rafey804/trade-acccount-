@@ -1,14 +1,14 @@
 'use client';
 
 // =============================================================================
-// PnL Cards — Unrealized & Realized PnL with color coding
+// PnL Cards — CSS variable aware
 // =============================================================================
 
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import AnimatedCounter from '@/components/ui/AnimatedCounter';
 
-interface PnLCardsProps {
+interface Props {
   unrealizedPnl: number;
   realizedToday: number;
   realizedWeek: number;
@@ -16,70 +16,63 @@ interface PnLCardsProps {
   loading: boolean;
 }
 
-export default function PnLCards({
-  unrealizedPnl,
-  realizedToday,
-  realizedWeek,
-  realizedMonth,
-  loading,
-}: PnLCardsProps) {
-  const pnlItems = [
-    { label: 'Unrealized PnL', value: unrealizedPnl, live: true },
-    { label: 'Today', value: realizedToday },
-    { label: 'This Week', value: realizedWeek },
-    { label: 'This Month', value: realizedMonth },
+export default function PnLCards({ unrealizedPnl, realizedToday, realizedWeek, realizedMonth, loading }: Props) {
+  const items = [
+    { label: 'Unrealized P&L', value: unrealizedPnl, live: true },
+    { label: 'Today',          value: realizedToday },
+    { label: 'This Week',      value: realizedWeek },
+    { label: 'This Month',     value: realizedMonth },
   ];
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="glass-card relative overflow-hidden group"
+      transition={{ delay: 0.14, duration: 0.45, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
+      className="card"
     >
-      {/* Background Subtle Gradient depending on Unrealized PnL */}
-      <div 
-        className={`absolute inset-0 opacity-5 transition-colors duration-1000 ${unrealizedPnl >= 0 ? 'bg-[var(--profit)]' : 'bg-[var(--loss)]'}`}
-      />
-
-      <div className="flex items-center gap-2 mb-6 relative z-10">
-        <Activity size={18} className="text-[var(--accent-primary)] drop-shadow-[0_0_8px_rgba(0,240,255,0.8)]" />
-        <h3 className="text-sm font-bold text-[var(--foreground)] tracking-[0.15em] uppercase">Profit & Loss</h3>
+      <div className="flex items-center justify-between mb-5">
+        <p className="label">Profit & Loss</p>
+        <span className="text-[10px] font-medium" style={{ color: 'var(--fg-3)' }}>From Journal</span>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-        {pnlItems.map((item, i) => {
-          const isProfit = item.value >= 0;
-          const isLoss = item.value < 0;
-          
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {items.map((item) => {
+          const pos  = item.value > 0;
+          const neg  = item.value < 0;
+          const zero = item.value === 0;
+          const col  = pos ? 'var(--profit)' : neg ? 'var(--loss)' : 'var(--fg-3)';
+          const bg   = pos ? 'var(--profit-dim)' : neg ? 'var(--loss-dim)' : 'var(--surface-2)';
+
           return (
-            <div key={item.label} className="space-y-1.5 p-3 rounded-xl transition-all duration-300 hover:bg-[var(--surface)] border border-transparent hover:border-[var(--border)]">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-[var(--muted-fg)] font-semibold tracking-wide uppercase">{item.label}</span>
+            <div
+              key={item.label}
+              className="rounded-xl p-4 transition-colors duration-200"
+              style={{ background: bg }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="label">{item.label}</span>
                 {item.live && (
-                  <span className="flex h-2 w-2 relative">
-                    <span className={`animate-pulse-live absolute h-full w-full rounded-full ${isProfit ? 'bg-[var(--profit)]' : 'bg-[var(--loss)]'}`} />
-                    <span className={`relative h-2 w-2 rounded-full ${isProfit ? 'bg-[var(--profit)]' : 'bg-[var(--loss)]'} shadow-[0_0_8px_currentColor]`} />
-                  </span>
+                  <span
+                    className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
+                    style={{ background: col }}
+                  />
                 )}
               </div>
-              
+
               {loading ? (
-                <div className="h-8 w-24 rounded-lg animate-shimmer mt-1" />
+                <div className="h-7 w-24 animate-shimmer mt-1" />
               ) : (
-                <div className={`text-2xl font-extrabold flex items-center gap-1.5 tracking-tight
-                  ${isProfit ? 'text-glow-profit' : isLoss ? 'text-glow-loss' : 'text-[var(--muted-fg)]'}`}
-                >
-                  {isProfit && item.value !== 0 ? (
-                    <TrendingUp size={16} strokeWidth={3} className="drop-shadow-md" />
-                  ) : isLoss ? (
-                    <TrendingDown size={16} strokeWidth={3} className="drop-shadow-md" />
-                  ) : null}
-                  <AnimatedCounter
-                    value={Math.abs(item.value)}
-                    prefix={item.value >= 0 ? '+$' : '-$'}
-                    decimals={2}
-                  />
+                <div className="flex items-center gap-1" style={{ color: col }}>
+                  {pos && !zero && <TrendingUp size={13} strokeWidth={2.5} />}
+                  {neg           && <TrendingDown size={13} strokeWidth={2.5} />}
+                  <span className="text-xl font-bold">
+                    <AnimatedCounter
+                      value={Math.abs(item.value)}
+                      prefix={pos && !zero ? '+$' : neg ? '-$' : '$'}
+                      decimals={2}
+                    />
+                  </span>
                 </div>
               )}
             </div>
