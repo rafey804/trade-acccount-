@@ -59,7 +59,8 @@ export async function POST(req: Request) {
           pnl: data.pnl,
           setup: data.setup,
           reasoning: data.reasoning,
-          screenshot_url: data.screenshot_url,
+          before_screenshot_url: data.before_screenshot_url,
+          after_screenshot_url: data.after_screenshot_url,
         })
         .eq('id', data.id);
 
@@ -82,7 +83,8 @@ export async function POST(req: Request) {
         pnl: data.pnl,
         setup: data.setup,
         reasoning: data.reasoning,
-        screenshot_url: data.screenshot_url,
+        before_screenshot_url: data.before_screenshot_url,
+        after_screenshot_url: data.after_screenshot_url,
       }]);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
