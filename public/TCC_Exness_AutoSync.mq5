@@ -33,6 +33,7 @@ input bool   InpDebugLog      = true; // Show log messages in Experts tab
 //--- Globals
 int    g_timerCount    = 0;
 ulong  g_lastPositions[];   // Track tickets from last check to detect closes
+double g_moneyMultiplier = 1.0; // 0.01 for Cent accounts
 
 //+------------------------------------------------------------------+
 void OnInit()
@@ -41,6 +42,13 @@ void OnInit()
    ArrayResize(g_lastPositions, 0);
    Log("✅ TCC AutoSync EA started. Dashboard: " + InpDashboardURL);
    Log("⏱ Syncing open positions every " + (string)InpSyncInterval + " seconds.");
+   
+   string currency = AccountInfoString(ACCOUNT_CURRENCY);
+   if (currency == "USC" || currency == "EUC" || currency == "GBPc" || StringFind(currency, "Cent") >= 0)
+   {
+      g_moneyMultiplier = 0.01;
+      Log("💰 Cent account detected (" + currency + "). Values will be converted to USD.");
+   }
    
    // Immediately send current state on startup
    SyncOpenPositions();
@@ -89,8 +97,8 @@ void SyncOpenPositions()
       double volume    = PositionGetDouble(POSITION_VOLUME);
       double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
       double curPrice  = PositionGetDouble(POSITION_PRICE_CURRENT);
-      double floatPnl  = PositionGetDouble(POSITION_PROFIT);
-      double swap      = PositionGetDouble(POSITION_SWAP);
+      double floatPnl  = PositionGetDouble(POSITION_PROFIT) * g_moneyMultiplier;
+      double swap      = PositionGetDouble(POSITION_SWAP) * g_moneyMultiplier;
       datetime openTime = (datetime)PositionGetInteger(POSITION_TIME);
       long posType     = PositionGetInteger(POSITION_TYPE);
       string typeStr   = (posType == POSITION_TYPE_BUY) ? "buy" : "sell";
@@ -118,10 +126,10 @@ void SyncOpenPositions()
 //+------------------------------------------------------------------+
 void SendOpenPositions(string positionsJson)
 {
-   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
-   double equity = AccountInfoDouble(ACCOUNT_EQUITY);
-   double marginFree = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
-   double marginUsed = AccountInfoDouble(ACCOUNT_MARGIN);
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE) * g_moneyMultiplier;
+   double equity = AccountInfoDouble(ACCOUNT_EQUITY) * g_moneyMultiplier;
+   double marginFree = AccountInfoDouble(ACCOUNT_MARGIN_FREE) * g_moneyMultiplier;
+   double marginUsed = AccountInfoDouble(ACCOUNT_MARGIN) * g_moneyMultiplier;
    
    string accountJson = StringFormat(
       "{\"balance\":%.2f,\"equity\":%.2f,\"margin_free\":%.2f,\"margin\":%.2f}",
@@ -217,9 +225,9 @@ void SyncClosedTrade(ulong positionTicket)
       
       // Got the closing deal!
       string  symbol     = HistoryDealGetString(dealTicket, DEAL_SYMBOL);
-      double  profit     = HistoryDealGetDouble(dealTicket, DEAL_PROFIT);
-      double  commission = HistoryDealGetDouble(dealTicket, DEAL_COMMISSION);
-      double  swap       = HistoryDealGetDouble(dealTicket, DEAL_SWAP);
+      double  profit     = HistoryDealGetDouble(dealTicket, DEAL_PROFIT) * g_moneyMultiplier;
+      double  commission = HistoryDealGetDouble(dealTicket, DEAL_COMMISSION) * g_moneyMultiplier;
+      double  swap       = HistoryDealGetDouble(dealTicket, DEAL_SWAP) * g_moneyMultiplier;
       double  volume     = HistoryDealGetDouble(dealTicket, DEAL_VOLUME);
       double  closePrice = HistoryDealGetDouble(dealTicket, DEAL_PRICE);
       datetime closeTime = (datetime)HistoryDealGetInteger(dealTicket, DEAL_TIME);
