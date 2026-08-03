@@ -25,7 +25,7 @@
 #property description "Auto-syncs live + closed trades to your dashboard"
 
 //--- Inputs
-input string InpDashboardURL  = "https://your-dashboard.vercel.app";  // Your Vercel/Render URL
+input string InpDashboardURL  = "https://trade-acccount.vercel.app";  // Your Vercel/Render URL
 input string InpSecret        = "exness-dashboard-secret";             // Secret Key (match .env.local)
 input int    InpSyncInterval  = 5;   // Sync open positions every X seconds
 input bool   InpDebugLog      = true; // Show log messages in Experts tab
