@@ -90,7 +90,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('journal_entries')
       .select('*')
-      .ilike('setup', 'Exness-Import')
+      .in('setup', ['Exness-Import', 'Exness-MT4'])
       .order('trade_date', { ascending: false });
 
     if (error) throw error;
