@@ -59,6 +59,9 @@ export async function POST(req: Request) {
           pnl: data.pnl,
           setup: data.setup,
           reasoning: data.reasoning,
+          mistake: data.mistake,
+          lesson: data.lesson,
+          emotion_rating: data.emotion_rating,
           before_screenshot_url: data.before_screenshot_url,
           after_screenshot_url: data.after_screenshot_url,
         })
@@ -83,6 +86,9 @@ export async function POST(req: Request) {
         pnl: data.pnl,
         setup: data.setup,
         reasoning: data.reasoning,
+        mistake: data.mistake,
+        lesson: data.lesson,
+        emotion_rating: data.emotion_rating,
         before_screenshot_url: data.before_screenshot_url,
         after_screenshot_url: data.after_screenshot_url,
       }]);
