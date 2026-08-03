@@ -59,7 +59,10 @@ const COOLDOWN_DURATION = 2 * 60 * 60 * 1000; // 2 hours ms
 const DAILY_LOSS_LIMIT = 5;
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  // Return today's date in PKT (UTC+5)
+  const now = new Date();
+  const pkt = new Date(now.getTime() + 5 * 60 * 60 * 1000);
+  return pkt.toISOString().slice(0, 10);
 }
 
 function pktHour() {
