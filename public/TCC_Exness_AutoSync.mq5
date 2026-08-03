@@ -28,12 +28,14 @@
 input string InpDashboardURL  = "https://trade-acccount.vercel.app";  // Your Vercel/Render URL
 input string InpSecret        = "exness-dashboard-secret";             // Secret Key (match .env.local)
 input int    InpSyncInterval  = 5;   // Sync open positions every X seconds
+input int    InpSyncHistoryDays = 30; // Sync past X days history on startup (0 to disable)
 input bool   InpDebugLog      = true; // Show log messages in Experts tab
 
 //--- Globals
 int    g_timerCount    = 0;
 ulong  g_lastPositions[];   // Track tickets from last check to detect closes
 double g_moneyMultiplier = 1.0; // 0.01 for Cent accounts
+bool   g_historySynced = false; // Flag to ensure history is only synced once
 
 //+------------------------------------------------------------------+
 void OnInit()
@@ -67,6 +69,13 @@ void OnDeinit(const int reason)
 void OnTimer()
 {
    g_timerCount++;
+   
+   // Run one-time history sync if requested
+   if (InpSyncHistoryDays > 0 && !g_historySynced)
+   {
+      SyncPastHistory(InpSyncHistoryDays);
+      g_historySynced = true;
+   }
    
    // Check for closed trades on every tick
    CheckForClosedTrades();
@@ -334,10 +343,47 @@ int HttpPost(string url, string jsonPayload)
 }
 
 //+------------------------------------------------------------------+
-//| Log helper                                                       |
+//| Sync all past closed trades from X days ago                      |
 //+------------------------------------------------------------------+
-void Log(string message)
+void SyncPastHistory(int days)
 {
-   if (InpDebugLog)
-      Print("[TCC-EA] ", message);
+   Log("⏳ Syncing past " + (string)days + " days of history. Please wait...");
+   
+   datetime fromTime = TimeCurrent() - days * 24 * 3600;
+   if (!HistorySelect(fromTime, TimeCurrent() + 60))
+   {
+      Log("❌ HistorySelect failed for past history.");
+      return;
+   }
+   
+   int totalDeals = HistoryDealsTotal();
+   int syncedCount = 0;
+   
+   // Iterate forward so older trades are synced first
+   for (int i = 0; i < totalDeals; i++)
+   {
+      ulong dealTicket = HistoryDealGetTicket(i);
+      if (dealTicket == 0) continue;
+      
+      long entryType = HistoryDealGetInteger(dealTicket, DEAL_ENTRY);
+      if (entryType != DEAL_ENTRY_OUT) continue;
+      
+      ulong posId = (ulong)HistoryDealGetInteger(dealTicket, DEAL_POSITION_ID);
+      if (posId > 0)
+      {
+         SyncClosedTrade(posId);
+         syncedCount++;
+      }
+   }
+   
+   Log("✅ Past history sync complete! Processed " + (string)syncedCount + " closed trades.");
 }
+
+//+------------------------------------------------------------------+
+//| Log wrapper                                                      |
+//+------------------------------------------------------------------+
+void Log(string msg)
+{
+   if (InpDebugLog) Print("[TCC-EA]  ", msg);
+}
+//+------------------------------------------------------------------+
