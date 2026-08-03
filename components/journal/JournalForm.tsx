@@ -206,7 +206,6 @@ export default function JournalForm({
             onChange={(e) => setEntryPrice(e.target.value)}
             className="form-input"
             placeholder="0.00"
-            required
           />
         </div>
 
@@ -237,7 +236,6 @@ export default function JournalForm({
             onChange={(e) => setPositionSize(e.target.value)}
             className="form-input"
             placeholder="100"
-            required
           />
         </div>
 
