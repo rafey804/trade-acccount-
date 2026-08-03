@@ -33,7 +33,7 @@ type Session = {
 
 // PKT Hours (UTC+5) roughly
 const sessions: Session[] = [
-  { name: 'Asia', label: '04:00 - 14:00', color: 'var(--fg-3)', startHour: 4, endHour: 14 },
+  { name: 'Asia', label: '04:00 - 12:00', color: 'var(--fg-3)', startHour: 4, endHour: 12 },
   { name: 'London', label: '12:00 - 21:00', color: '#8B5CF6', startHour: 12, endHour: 21 },
   { name: 'New York', label: '17:00 - 02:00', color: '#10B981', startHour: 17, endHour: 26 }, // 26 = 2am next day
 ];
