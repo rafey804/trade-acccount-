@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     if (result) query = query.eq('result', result);
     if (setup) query = query.eq('setup', setup);
     if (excludeAutoSynced) {
-      query = query.not('setup', 'eq', 'Auto-Synced').not('setup', 'eq', 'Exness-Import').not('setup', 'eq', 'Exness-MT4');
+      query = query.or('setup.is.null,and(setup.neq.Auto-Synced,setup.neq.Exness-Import,setup.neq.Exness-MT4)');
     }
 
     const { data, error } = await query;
