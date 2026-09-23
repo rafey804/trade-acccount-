@@ -390,3 +390,257 @@ body {
 .animate-ticker:hover {
   animation-play-state: paused;
 }
+
+/* =============================================================================
+   CYBER THEME — Analytics Page Premium Styling
+   ============================================================================= */
+
+/* ─── Cyber Accent Variables ─────────────────────────────────────────────────  */
+:root,
+[data-theme="dark"] {
+  --cyber-cyan:        #06D6E0;
+  --cyber-cyan-dim:    rgba(6, 214, 224, 0.12);
+  --cyber-cyan-glow:   rgba(6, 214, 224, 0.35);
+  --cyber-magenta:     #E040FB;
+  --cyber-magenta-dim: rgba(224, 64, 251, 0.12);
+  --cyber-magenta-glow:rgba(224, 64, 251, 0.35);
+  --cyber-blue:        #3B82F6;
+  --cyber-blue-dim:    rgba(59, 130, 246, 0.12);
+  --cyber-amber:       #F59E0B;
+  --cyber-amber-dim:   rgba(245, 158, 11, 0.12);
+  --cyber-emerald:     #10B981;
+  --cyber-rose:        #F43F5E;
+  --cyber-surface:     rgba(15, 15, 23, 0.65);
+  --cyber-border:      rgba(6, 214, 224, 0.10);
+  --cyber-grid-color:  rgba(6, 214, 224, 0.04);
+}
+
+[data-theme="light"] {
+  --cyber-cyan:        #0891B2;
+  --cyber-cyan-dim:    rgba(8, 145, 178, 0.08);
+  --cyber-cyan-glow:   rgba(8, 145, 178, 0.18);
+  --cyber-magenta:     #A21CAF;
+  --cyber-magenta-dim: rgba(162, 28, 175, 0.08);
+  --cyber-magenta-glow:rgba(162, 28, 175, 0.18);
+  --cyber-blue:        #2563EB;
+  --cyber-blue-dim:    rgba(37, 99, 235, 0.08);
+  --cyber-amber:       #D97706;
+  --cyber-amber-dim:   rgba(217, 119, 6, 0.08);
+  --cyber-emerald:     #059669;
+  --cyber-rose:        #E11D48;
+  --cyber-surface:     rgba(255, 255, 255, 0.80);
+  --cyber-border:      rgba(8, 145, 178, 0.12);
+  --cyber-grid-color:  rgba(8, 145, 178, 0.04);
+}
+
+/* ─── Animated Gradient Border ───────────────────────────────────────────────  */
+@keyframes gradient-rotate {
+  0%   { --gradient-angle: 0deg; }
+  100% { --gradient-angle: 360deg; }
+}
+
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.cyber-card {
+  position: relative;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--cyber-border);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cyber-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--gradient-angle, 0deg),
+    var(--cyber-cyan),
+    var(--cyber-magenta),
+    var(--cyber-cyan)
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  animation: gradient-rotate 4s linear infinite;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.cyber-card:hover::before {
+  opacity: 1;
+}
+
+.cyber-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover), 0 0 30px var(--cyber-cyan-dim);
+}
+
+/* ─── Always-visible gradient border variant ─────────────────────────────────  */
+.cyber-card-glow {
+  position: relative;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-card), 0 0 20px var(--cyber-cyan-dim);
+  border: none;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cyber-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--gradient-angle, 0deg),
+    var(--cyber-cyan),
+    var(--cyber-magenta),
+    var(--cyber-blue),
+    var(--cyber-cyan)
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  animation: gradient-rotate 3s linear infinite;
+  pointer-events: none;
+}
+
+.cyber-card-glow:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover), 0 0 40px var(--cyber-cyan-dim);
+}
+
+/* ─── Neon Text ──────────────────────────────────────────────────────────────  */
+.neon-text-cyan {
+  color: var(--cyber-cyan);
+  text-shadow: 0 0 10px var(--cyber-cyan-glow), 0 0 30px var(--cyber-cyan-dim);
+}
+
+.neon-text-magenta {
+  color: var(--cyber-magenta);
+  text-shadow: 0 0 10px var(--cyber-magenta-glow), 0 0 30px var(--cyber-magenta-dim);
+}
+
+/* ─── Gradient Text ──────────────────────────────────────────────────────────  */
+.gradient-text-cyber {
+  background: linear-gradient(135deg, var(--cyber-cyan), var(--cyber-magenta));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Cyber Grid Background ──────────────────────────────────────────────────  */
+.cyber-grid-bg {
+  position: relative;
+}
+
+.cyber-grid-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--cyber-grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cyber-grid-color) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+.cyber-grid-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Scan Line Animation ────────────────────────────────────────────────────  */
+@keyframes scan-line {
+  0%   { top: -10%; }
+  100% { top: 110%; }
+}
+
+.cyber-scan-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyber-cyan-glow), transparent);
+  animation: scan-line 6s linear infinite;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* ─── Glow Pulse ─────────────────────────────────────────────────────────────  */
+@keyframes glow-pulse-cyan {
+  0%, 100% { box-shadow: 0 0 5px var(--cyber-cyan-dim); }
+  50%      { box-shadow: 0 0 20px var(--cyber-cyan-glow), 0 0 40px var(--cyber-cyan-dim); }
+}
+
+@keyframes glow-pulse-magenta {
+  0%, 100% { box-shadow: 0 0 5px var(--cyber-magenta-dim); }
+  50%      { box-shadow: 0 0 20px var(--cyber-magenta-glow), 0 0 40px var(--cyber-magenta-dim); }
+}
+
+.animate-glow-cyan    { animation: glow-pulse-cyan    3s ease-in-out infinite; }
+.animate-glow-magenta { animation: glow-pulse-magenta 3s ease-in-out infinite; }
+
+/* ─── Ring Animation ─────────────────────────────────────────────────────────  */
+@keyframes ring-draw {
+  from { stroke-dashoffset: var(--ring-circumference, 283); }
+  to   { stroke-dashoffset: var(--ring-offset, 0); }
+}
+
+.animate-ring-draw {
+  animation: ring-draw 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── Stat Value Shine ───────────────────────────────────────────────────────  */
+@keyframes stat-shine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.stat-value-shine {
+  background: linear-gradient(
+    90deg,
+    var(--fg) 0%,
+    var(--fg) 40%,
+    var(--cyber-cyan) 50%,
+    var(--fg) 60%,
+    var(--fg) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: stat-shine 4s ease-in-out infinite;
+}
+
+/* ─── Recharts Custom Tooltip ────────────────────────────────────────────────  */
+.cyber-tooltip {
+  background: var(--surface) !important;
+  border: 1px solid var(--cyber-border) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 20px var(--cyber-cyan-dim) !important;
+  padding: 0.75rem 1rem !important;
+  backdrop-filter: blur(12px);
+}
+
+/* ─── Responsive cyber cards ─────────────────────────────────────────────────  */
+@media (max-width: 768px) {
+  .cyber-card, .cyber-card-glow { padding: 1.125rem; border-radius: 14px; }
+}
